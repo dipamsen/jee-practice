@@ -61,14 +61,19 @@ const reset = () => {
   isCorrect.value = null;
 };
 
-const selectedAns = ref<string | string[]>("");
+const selectedAns = ref<string | string[] | null>(null);
 const submitAns = () => {
-  let val = selectedAns.value;
+  let val: any = selectedAns.value;
   if (Array.isArray(val)) {
     val = val.join("");
   }
 
-  if (val === currQuestion.value.fullInfo?.questionData.answerOption) {
+  let ans: any = currQuestion.value.fullInfo?.questionData.answerOption;
+  if (currQuestion.value.QuestionType === "Numerical") {
+    val = Number(val);
+    ans = Number(ans);
+  }
+  if (val === ans) {
     isCorrect.value = true;
   } else {
     isCorrect.value = false;
@@ -84,29 +89,28 @@ const isCorrect = ref<boolean | null>(null);
     <h1>Test your knowledge</h1>
 
     <v-card v-if="currQuestion.fullInfo">
-      <div class="d-flex ma-5 justify-space-between">
-        <span
-          >{{ currQuestion.chapterName }} -
-          {{ currQuestion.kscClusterName }}</span
-        >
+      <v-card-text class="d-flex justify-space-between">
+        <span>
+          {{ currQuestion.chapterName }} - {{ currQuestion.kscClusterName }}
+        </span>
         <span>{{ currQuestion.QuestionType }}</span>
-      </div>
-      <v-img :aspect-ratio="3 / 1" :src="currQuestion.QuestionDiagramURL" />
+      </v-card-text>
+      <img
+        style="display: block; margin: 0 auto; max-width: 100%"
+        :src="currQuestion.QuestionDiagramURL"
+      />
 
       <v-card-text>
-        <div
-          class="ul"
-          style="gap: 2rem"
-          v-if="
-            currQuestion.QuestionType === 'Objective' ||
-            currQuestion.QuestionType === 'Multiple Choice'
-          "
-        >
+        <div class="ul">
           <v-btn-toggle
             rounded="l"
             :multiple="currQuestion.QuestionType === 'Multiple Choice'"
             v-model="selectedAns"
             :disabled="isCorrect !== null"
+            v-if="
+              currQuestion.QuestionType === 'Objective' ||
+              currQuestion.QuestionType === 'Multiple Choice'
+            "
           >
             <v-btn
               v-for="option in ['A', 'B', 'C', 'D']"
@@ -116,33 +120,38 @@ const isCorrect = ref<boolean | null>(null);
               variant="elevated"
               :key="option"
               :value="option"
-              >{{ option }}</v-btn
             >
+              {{ option }}
+            </v-btn>
           </v-btn-toggle>
-          <v-btn
-            @click="submitAns"
-            color="primary"
-            variant="outlined"
-            :disabled="isCorrect !== null || selectedAns === ''"
-          >
-            Submit
-          </v-btn>
-        </div>
-        <div class="ul" v-else-if="currQuestion.QuestionType === 'Numerical'">
           <v-text-field
+            v-else-if="
+              currQuestion.QuestionType === 'Numerical' ||
+              currQuestion.QuestionType === 'Subjective'
+            "
             label="Answer"
             variant="underlined"
             type="number"
+            :disabled="isCorrect !== null"
             v-model="selectedAns"
           ></v-text-field>
-          <v-btn color="primary" variant="outlined"> Submit </v-btn>
+          <v-btn
+            @click="submitAns"
+            color="primary"
+            variant="elevated"
+            :disabled="
+              isCorrect !== null || selectedAns == null || selectedAns === ''
+            "
+          >
+            Submit
+          </v-btn>
         </div>
       </v-card-text>
 
       <v-card-actions class="justify-space-between">
         <v-btn
           color="primary"
-          variant="elevated"
+          variant="outlined"
           @click="previous"
           :disabled="currIndex === 0"
         >
@@ -150,11 +159,12 @@ const isCorrect = ref<boolean | null>(null);
         </v-btn>
         <v-btn
           color="primary"
-          variant="elevated"
+          variant="outlined"
           @click="next"
           :disabled="currIndex === questionsList.length - 1"
-          >Next</v-btn
         >
+          Next
+        </v-btn>
       </v-card-actions>
 
       <section v-if="isCorrect !== null">
@@ -173,7 +183,7 @@ const isCorrect = ref<boolean | null>(null);
       <v-img :aspect-ratio="3 / 1" />
     </v-card>
 
-    <footer>Seed: {{ seed }}</footer>
+    <footer>(Shuffle Seed: {{ seed }})</footer>
   </main>
 </template>
 
