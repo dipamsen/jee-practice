@@ -189,7 +189,7 @@ const isCorrect = ref<boolean | null>(null);
 
 <style>
 main {
-  width: 90%;
+  width: 80%;
   max-width: 800px;
   margin: 0 auto;
 }
